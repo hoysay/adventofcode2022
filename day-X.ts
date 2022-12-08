@@ -47,7 +47,7 @@ function isTreeVisible(allTrees: number[][], rowIndex: number, colIndex: number)
 
     // RIGHT
     let isVisibleFromRight = true;
-    for (let j= colIndex +1; j < numCols; j++) {
+    for (let j = colIndex + 1; j < numCols; j++) {
         const comparedValue = allTrees[rowIndex][j];
         if (comparedValue >= currentValue) {
             isVisibleFromRight = false;
@@ -59,8 +59,59 @@ function isTreeVisible(allTrees: number[][], rowIndex: number, colIndex: number)
     return isVisibleFromRight || isVisibleFromBottom || isVisibleFromLeft || isVisibleFromTop;
 }
 
+function getTreeScore(allTrees: number[][], rowIndex: number, colIndex: number): number {
+    // Check obvious edge cases
+    const numRows = allTrees.length;
+    const numCols = allTrees[0].length;
+    const currentValue = allTrees[rowIndex][colIndex];
+
+    // TOP
+    let topScore = 0;
+    for (let i = rowIndex - 1; i >= 0; i--) {
+        topScore++;
+        const comparedValue = allTrees[i][colIndex];
+        if (comparedValue >= currentValue) {
+            break;
+        }
+    }
+
+    // DOWN
+    let bottomScore = 0;
+    for (let i = rowIndex + 1; i < numRows; i++) {
+        bottomScore++
+        const comparedValue = allTrees[i][colIndex];
+        if (comparedValue >= currentValue) {
+            break;
+        }
+    }
+
+    // LEFT
+    let leftScore = 0;
+    for (let j = colIndex - 1; j >= 0; j--) {
+        leftScore++;
+        const comparedValue = allTrees[rowIndex][j];
+        if (comparedValue >= currentValue) {
+            break;
+        }
+    }
+
+    // RIGHT
+    let rightScore = 0;
+    for (let j = colIndex + 1; j < numCols; j++) {
+        rightScore++;
+        const comparedValue = allTrees[rowIndex][j];
+        if (comparedValue >= currentValue) {
+            break;
+        }
+    }
+
+    console.log("top", topScore, "bottom", bottomScore, "left", leftScore, "right", rightScore)
+    return topScore * bottomScore * leftScore * rightScore;
+
+
+}
+
 function runInput(str: string) {
-    // 1. GET TREES
     const trees: number[][] = [];
 
     const rows = str.split("\n");
@@ -72,19 +123,24 @@ function runInput(str: string) {
         trees[index] = contents;
     })
 
-    let total = 0;
+    let bestScore = 0;
 
     for (let rowIndex = 0; rowIndex < trees.length; rowIndex++) {
         for (let colIndex = 0; colIndex < trees[0].length; colIndex++) {
-            // console.log(rowIndex, colIndex);
-            const isVisible = isTreeVisible(trees, rowIndex, colIndex)
-            if (isVisible) {
-                total++;
+            console.log(rowIndex, colIndex, "----", trees[rowIndex][colIndex])
+
+            // const isVisible = isTreeVisible(trees, rowIndex, colIndex)
+            // if (isVisible) {
+            //     total++;
+            // }
+            const currentScore = getTreeScore(trees, rowIndex, colIndex);
+            if (currentScore > bestScore) {
+                bestScore = currentScore;
             }
         }
     }
 
-    console.log(total);
+    console.log(bestScore);
 }
 
 
