@@ -93,8 +93,10 @@ function runInput(str) {
     const tailVisitedLocations = new Set();
     // Start at {1000, 1000} to account for potential changes in direction
     let headPosition = { rowIndex: 1000, colIndex: 1000 };
-    let tailPosition = { rowIndex: 1000, colIndex: 1000 };
-    console.log(headPosition, tailPosition);
+    const tailPositions = new Map();
+    for (let i = 1; i <= 9; i++) {
+        tailPositions.set(i, { rowIndex: 1000, colIndex: 1000 });
+    }
     tailVisitedLocations.add("1000-1000");
     allHeadMoves.forEach(move => {
         console.log("----");
@@ -113,10 +115,13 @@ function runInput(str) {
         else { // D
             headPosition.rowIndex += 1;
         }
-        const newTailPosition = getTailPosition(headPosition, tailPosition);
-        console.log("new head", headPosition, "new tail", newTailPosition);
-        tailPosition = newTailPosition;
-        tailVisitedLocations.add(`${newTailPosition.rowIndex}-${newTailPosition.colIndex}`);
+        const newTail1Position = getTailPosition(headPosition, tailPositions.get(1));
+        tailPositions.set(1, newTail1Position);
+        for (let i = 2; i <= 9; i++) {
+            const newTailXPosition = getTailPosition(tailPositions.get(i - 1), tailPositions.get(i));
+            tailPositions.set(i, newTailXPosition);
+        }
+        tailVisitedLocations.add(`${tailPositions.get(9).rowIndex}-${tailPositions.get(9).colIndex}`);
     });
     console.log(tailVisitedLocations.size);
 }

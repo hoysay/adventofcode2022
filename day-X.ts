@@ -95,13 +95,15 @@ function getTailPosition(newHeadPosition: Position, tailPosition: Position): Pos
 
 function runInput(str: string) {
     const allHeadMoves = getHeadMoves(str);
-    
+
     const tailVisitedLocations = new Set<string>();
 
     // Start at {1000, 1000} to account for potential changes in direction
     let headPosition: Position = { rowIndex: 1000, colIndex: 1000 };
-    let tailPosition: Position = { rowIndex: 1000, colIndex: 1000 };
-    console.log(headPosition, tailPosition)
+    const tailPositions = new Map<number, Position>();
+    for (let i = 1; i <= 9; i++) {
+        tailPositions.set(i, {rowIndex: 1000, colIndex: 1000 });
+    }
 
     tailVisitedLocations.add("1000-1000");
 
@@ -120,12 +122,17 @@ function runInput(str: string) {
         } else { // D
             headPosition.rowIndex += 1;
         }
+    
+        const newTail1Position = getTailPosition(headPosition, tailPositions.get(1));
+        tailPositions.set(1, newTail1Position);
 
-        const newTailPosition = getTailPosition(headPosition, tailPosition);
-        console.log("new head", headPosition, "new tail", newTailPosition);
-        tailPosition = newTailPosition;
+        for (let i = 2; i <= 9; i++) {
+            const newTailXPosition = getTailPosition(tailPositions.get(i-1), tailPositions.get(i));
+            tailPositions.set(i, newTailXPosition);
+        }
 
-        tailVisitedLocations.add(`${newTailPosition.rowIndex}-${newTailPosition.colIndex}`)
+
+        tailVisitedLocations.add(`${tailPositions.get(9).rowIndex}-${tailPositions.get(9).colIndex}`)
 
 
 
