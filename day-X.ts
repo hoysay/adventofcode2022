@@ -2,145 +2,137 @@
 
 import { testInput, realInput } from "./input";
 
-function isTreeVisible(allTrees: number[][], rowIndex: number, colIndex: number): boolean {
-    // Check obvious edge cases
-    const numRows = allTrees.length;
-    const numCols = allTrees[0].length;
-    if (rowIndex === 0 || rowIndex === numRows - 1) {
-        return true;
-    } else if (colIndex === 0 || colIndex === numCols - 1) {
-        return true;
-    }
-
-    const currentValue = allTrees[rowIndex][colIndex];
-
-    // TOP
-    let isVisibleFromTop = true;
-    for (let i = rowIndex - 1; i >= 0; i--) {
-        const comparedValue = allTrees[i][colIndex];
-        if (comparedValue >= currentValue) {
-            isVisibleFromTop = false;
-            // console.log(rowIndex, colIndex, "blocked on top", comparedValue, currentValue)
-            break;
-        }
-    }
-
-    // DOWN
-    let isVisibleFromBottom = true;
-    for (let i = rowIndex + 1; i < numRows; i++) {
-        const comparedValue = allTrees[i][colIndex];
-        if (comparedValue >= currentValue) {
-            isVisibleFromBottom = false;
-            break;
-        }
-    }
-
-    // LEFT
-    let isVisibleFromLeft = true;
-    for (let j = colIndex - 1; j >= 0; j--) {
-        const comparedValue = allTrees[rowIndex][j];
-        if (comparedValue >= currentValue) {
-            isVisibleFromLeft = false;
-            break;
-        }
-    }
-
-    // RIGHT
-    let isVisibleFromRight = true;
-    for (let j = colIndex + 1; j < numCols; j++) {
-        const comparedValue = allTrees[rowIndex][j];
-        if (comparedValue >= currentValue) {
-            isVisibleFromRight = false;
-            break;
-        }
-    }
-    // console.log("top", isVisibleFromTop, "bottom", isVisibleFromBottom, "left", isVisibleFromLeft, "right", isVisibleFromRight)
-
-    return isVisibleFromRight || isVisibleFromBottom || isVisibleFromLeft || isVisibleFromTop;
+interface Position {
+    rowIndex: number;
+    colIndex: number;
 }
 
-function getTreeScore(allTrees: number[][], rowIndex: number, colIndex: number): number {
-    // Check obvious edge cases
-    const numRows = allTrees.length;
-    const numCols = allTrees[0].length;
-    const currentValue = allTrees[rowIndex][colIndex];
+// Takes input of "R 4\nU 4..", and returns discrete one-distance moves.
+function getHeadMoves(inputStr: string): string[] {
+    const result: string[] = [];
 
-    // TOP
-    let topScore = 0;
-    for (let i = rowIndex - 1; i >= 0; i--) {
-        topScore++;
-        const comparedValue = allTrees[i][colIndex];
-        if (comparedValue >= currentValue) {
-            break;
+    const lines = inputStr.split("\n");
+    lines.forEach(elem => {
+        const pieces = elem.split(" ");
+        const numSteps = parseInt(pieces[1]);
+        for (let i = 0; i < numSteps; i++) {
+            result.push(pieces[0]);
         }
-    }
-
-    // DOWN
-    let bottomScore = 0;
-    for (let i = rowIndex + 1; i < numRows; i++) {
-        bottomScore++
-        const comparedValue = allTrees[i][colIndex];
-        if (comparedValue >= currentValue) {
-            break;
-        }
-    }
-
-    // LEFT
-    let leftScore = 0;
-    for (let j = colIndex - 1; j >= 0; j--) {
-        leftScore++;
-        const comparedValue = allTrees[rowIndex][j];
-        if (comparedValue >= currentValue) {
-            break;
-        }
-    }
-
-    // RIGHT
-    let rightScore = 0;
-    for (let j = colIndex + 1; j < numCols; j++) {
-        rightScore++;
-        const comparedValue = allTrees[rowIndex][j];
-        if (comparedValue >= currentValue) {
-            break;
-        }
-    }
-
-    console.log("top", topScore, "bottom", bottomScore, "left", leftScore, "right", rightScore)
-    return topScore * bottomScore * leftScore * rightScore;
-
-
-}
-
-function runInput(str: string) {
-    const trees: number[][] = [];
-
-    const rows = str.split("\n");
-    rows.forEach((elem, index) => {
-        const contents: number[] = [];
-        for (let i = 0; i < elem.length; i++) {
-            contents.push(parseInt(elem[i]));
-        }
-        trees[index] = contents;
     })
 
-    let bestScore = 0;
+    return result;
+}
 
-    for (let rowIndex = 0; rowIndex < trees.length; rowIndex++) {
-        for (let colIndex = 0; colIndex < trees[0].length; colIndex++) {
-            console.log(rowIndex, colIndex, "----", trees[rowIndex][colIndex])
+// return new Tail Position
+function getTailPosition(newHeadPosition: Position, tailPosition: Position): Position {
+    // Same node => OK, no move necessary
+    if (newHeadPosition.rowIndex === tailPosition.rowIndex && newHeadPosition.colIndex === tailPosition.colIndex) {
+        return tailPosition;
+    }
 
-            // const isVisible = isTreeVisible(trees, rowIndex, colIndex)
-            // if (isVisible) {
-            //     total++;
-            // }
-            const currentScore = getTreeScore(trees, rowIndex, colIndex);
-            if (currentScore > bestScore) {
-                bestScore = currentScore;
+    // Adjacent => OK, no move necessary
+    const rowDiff = Math.abs(newHeadPosition.rowIndex - tailPosition.rowIndex);
+    const colDiff = Math.abs(newHeadPosition.colIndex - tailPosition.colIndex);
+    if (rowDiff <= 1 && colDiff <= 1) {
+        return tailPosition
+    }
+
+    // Otherwise, need to move Tail to 'catch up'
+    if (rowDiff === 0) {
+        if (newHeadPosition.colIndex > tailPosition.colIndex) {
+            return {
+                rowIndex: tailPosition.rowIndex,
+                colIndex: tailPosition.colIndex + 1,
+            }
+        } else {
+            return {
+                rowIndex: tailPosition.rowIndex,
+                colIndex: tailPosition.colIndex - 1,
+            }
+        }
+    } else if (colDiff === 0) {
+        if (newHeadPosition.rowIndex > tailPosition.rowIndex) {
+            return {
+                rowIndex: tailPosition.rowIndex + 1,
+                colIndex: tailPosition.colIndex,
+            }
+        } else {
+            return {
+                rowIndex: tailPosition.rowIndex - 1,
+                colIndex: tailPosition.colIndex,
+            }
+        }
+    } else { // 'not touching, and aren't in same row or column' => tail always moves 1 step diagonally to keep up
+        // which direction (NW, NE, SE, SW) to go?
+        if (newHeadPosition.rowIndex < tailPosition.rowIndex) {
+            if (newHeadPosition.colIndex < tailPosition.colIndex) {
+                return { // NW
+                    rowIndex: tailPosition.rowIndex - 1,
+                    colIndex: tailPosition.colIndex - 1,
+                }
+            } else {
+                return { // NE
+                    rowIndex: tailPosition.rowIndex - 1,
+                    colIndex: tailPosition.colIndex + 1,
+                }
+            }
+        } else {
+            if (newHeadPosition.colIndex < tailPosition.colIndex) {
+                return { // SW
+                    rowIndex: tailPosition.rowIndex + 1,
+                    colIndex: tailPosition.colIndex - 1,
+                }
+            }
+            else {
+                return { // SE
+                    rowIndex: tailPosition.rowIndex + 1,
+                    colIndex: tailPosition.colIndex + 1,
+                }
             }
         }
     }
+}
 
-    console.log(bestScore);
+function runInput(str: string) {
+    const allHeadMoves = getHeadMoves(str);
+    
+    const tailVisitedLocations = new Set<string>();
+
+    // Start at {1000, 1000} to account for potential changes in direction
+    let headPosition: Position = { rowIndex: 1000, colIndex: 1000 };
+    let tailPosition: Position = { rowIndex: 1000, colIndex: 1000 };
+    console.log(headPosition, tailPosition)
+
+    tailVisitedLocations.add("1000-1000");
+
+    allHeadMoves.forEach(move => {
+        console.log("----")
+        // console.log("head", headPosition, "tail", tailPosition);
+        console.log(move);
+
+        // Calculate new Head Position
+        if (move === "R") {
+            headPosition.colIndex += 1;
+        } else if (move === "L") {
+            headPosition.colIndex -= 1;
+        } else if (move === "U") {
+            headPosition.rowIndex -= 1;
+        } else { // D
+            headPosition.rowIndex += 1;
+        }
+
+        const newTailPosition = getTailPosition(headPosition, tailPosition);
+        console.log("new head", headPosition, "new tail", newTailPosition);
+        tailPosition = newTailPosition;
+
+        tailVisitedLocations.add(`${newTailPosition.rowIndex}-${newTailPosition.colIndex}`)
+
+
+
+    });
+
+    console.log(tailVisitedLocations.size);
+
 }
 
 
