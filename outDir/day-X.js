@@ -2,9 +2,20 @@
 // tsc && node ./outDir/day-X.js
 Object.defineProperty(exports, "__esModule", { value: true });
 const input_1 = require("./input");
+// Decide whether next character is # or .
+function getRenderedCharacter(crtPixelIndex, spriteCenter) {
+    // Which column is CRT looking at
+    const crtColumnNumber = crtPixelIndex % 40;
+    let spriteLeft = (spriteCenter >= 0) ? spriteCenter - 1 : undefined;
+    let spriteRight = (spriteCenter < 40) ? spriteCenter + 1 : undefined;
+    if (crtColumnNumber === spriteLeft || crtColumnNumber === spriteCenter || crtColumnNumber === spriteRight) {
+        return "#";
+    }
+    return " ";
+}
 function runInput(str) {
     const commands = str.split("\n");
-    const cycleNumToValue = new Map();
+    const cycleNumToSpriteCenter = new Map();
     let currentCycle = 1;
     let currentRegisterValue = 1;
     let addOperationToFinish;
@@ -14,25 +25,32 @@ function runInput(str) {
             addOperationToFinish = undefined;
         }
         if (command === "noop") {
-            cycleNumToValue.set(currentCycle, currentRegisterValue);
+            cycleNumToSpriteCenter.set(currentCycle, currentRegisterValue);
             currentCycle++;
         }
         else {
-            cycleNumToValue.set(currentCycle, currentRegisterValue);
-            cycleNumToValue.set(currentCycle + 1, currentRegisterValue);
+            cycleNumToSpriteCenter.set(currentCycle, currentRegisterValue);
+            cycleNumToSpriteCenter.set(currentCycle + 1, currentRegisterValue);
             currentCycle += 2;
             addOperationToFinish = parseInt(command.split(" ")[1]);
         }
     });
-    // Do we need to finish the last operation?
-    for (let i = 1; i <= cycleNumToValue.size; i++) {
-        console.log(i, "---", cycleNumToValue.get(i));
+    // for (let i = 1; i <= cycleNumToSpriteCenter.size; i++) {
+    //     console.log(i, "---", cycleNumToSpriteCenter.get(i))
+    // }
+    let totalStr = "";
+    for (let cycleNum = 1; cycleNum <= cycleNumToSpriteCenter.size; cycleNum++) {
+        const crtPixelIndex = cycleNum - 1;
+        const spriteCenter = cycleNumToSpriteCenter.get(cycleNum);
+        const nextChar = getRenderedCharacter(crtPixelIndex, spriteCenter);
+        if (totalStr.length % 41 === 0) {
+            totalStr = totalStr + "\n" + nextChar;
+        }
+        else {
+            totalStr += nextChar;
+        }
     }
-    let total = 0;
-    for (let i = 20; i <= 220; i += 40) {
-        total += i * cycleNumToValue.get(i);
-    }
-    console.log(total);
+    console.log(totalStr);
 }
 /** ----- MODIFY TO CHANGE TEST VS. REAL ----- */
 // runInput(testInput);
