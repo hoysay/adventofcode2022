@@ -8,6 +8,7 @@ class Monkey {
         this.heldItems = initialItems;
         this.operation = operationFunc;
         this.testFunction = (x) => (x % divisNumber === 0);
+        this.divisNumber = divisNumber;
         this.trueRecipient = trueId;
         this.falseRecipient = falseId;
     }
@@ -17,7 +18,8 @@ class Monkey {
             return undefined;
         }
         const currentItem = this.heldItems.shift();
-        const updatedWorry = Math.floor(this.operation(currentItem) / 3);
+        const updatedWorry = this.operation(currentItem);
+        console.log(updatedWorry);
         this.numInspections += 1;
         const testResult = this.testFunction(updatedWorry);
         return {
@@ -29,7 +31,9 @@ class Monkey {
         return this.heldItems.length > 0;
     }
     catchItem(item) {
-        this.heldItems.push(item);
+        // HARD-CODED: need to change b/w test and real (I didn't want to code 
+        // the real calculation)
+        this.heldItems.push(item % leastCommonMultipleRealMonkeys);
     }
     print() {
         let result = "\tmonkey " + this.id;
@@ -87,8 +91,10 @@ const realMonkeys = [
     new Monkey(6, [92], x => x + 5, 11, 3, 0),
     new Monkey(7, [99, 76, 78, 76, 79, 90, 89], x => x + 7, 5, 4, 5),
 ];
+const leastCommonMultipleTestMonkeys = 96577;
+const leastCommonMultipleRealMonkeys = 9699690;
 // runMonkeys(testMonkeys, 20);
-runMonkeys(realMonkeys, 20);
+runMonkeys(realMonkeys, 10000);
 // function runInput(str: string) {
 // }
 /** ----- MODIFY TO CHANGE TEST VS. REAL ----- */
