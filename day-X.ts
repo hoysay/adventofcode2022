@@ -53,13 +53,13 @@ function findStepCount(heightMap: number[][], start: Position, target: Position)
     
     while (queue.length > 0) {
         const currentItem = queue.shift();
-        console.log("considering item", currentItem)
+        // console.log("considering item", currentItem)
         const currentPos = currentItem.pos;
         const currentNumSteps = currentItem.numSteps;
 
         if (visitedPositions.find(pos =>
             pos.colIndex === currentPos.colIndex && pos.rowIndex === currentPos.rowIndex)) {
-            console.log("already seen, ignoring");
+            // console.log("already seen, ignoring");
             continue;
         }
 
@@ -126,7 +126,26 @@ function runInput(str: string) {
 
     console.log(heightMap)
 
-    console.log(findStepCount(heightMap, startPosition, endPosition))
+    // Find all the locations w/ 'a' as the starting point.
+    const potentialStarts:Position[] = [];
+    for( let rowIndex = 0; rowIndex < heightMap.length; rowIndex++) {
+        for (let colIndex = 0; colIndex < heightMap[0].length; colIndex++) {
+            if (heightMap[rowIndex][colIndex] === 97) {
+                // 'a' corresponds to 97, i didn't translate down to zero-index lol
+                potentialStarts.push({rowIndex, colIndex})
+            }
+        }
+    }
+
+    // uhh there are like 600+, so hopefully this finishes quickly :^) 
+    console.log(potentialStarts.length);
+
+    const allResults: number[] = [];
+    for (let i =0 ; i < potentialStarts.length; i++) {
+        console.log("on potential start", i)
+        allResults.push(findStepCount(heightMap, potentialStarts[i], endPosition))
+    }
+    console.log(allResults.sort((a,b)=>a-b)[0])
 }
 
 /** ----- MODIFY TO CHANGE TEST VS. REAL ----- */
