@@ -2,145 +2,133 @@
 
 import { testInput, realInput } from "./input";
 
-interface ItemResult {
-    itemNumber: number;
-    monkeyRecipient: number;
+interface Position {
+    rowIndex: number;
+    colIndex: number;
 }
 
-class Monkey {
-    id: number;
-    heldItems: number[];
-    operation: (old: number) => number;
-    testFunction: (x: number) => boolean;
-    trueRecipient: number;
-    falseRecipient: number;
+interface QueueItem {
+    pos: Position;
+    numSteps: number;
+}
+
+type Direction = "up" | "down" | "left" | "right";
+
+function canMoveInDirection(heightMap: number[][], currentPosition: Position, dir: Direction): boolean {
+    const lastRowIndex = heightMap.length - 1;
+    const lastColIndex = heightMap[0].length - 1;
+
+    const { rowIndex, colIndex } = currentPosition;
+    const currentValue = heightMap[rowIndex][colIndex];
+
+    if (dir === "up") {
+        if (rowIndex === 0) { return false; }
+
+        const upValue = heightMap[rowIndex - 1][colIndex];
+        return currentValue + 1 >= upValue;
+    } else if (dir === "down") {
+        if (rowIndex === lastRowIndex) { return false }
+
+
+        const downValue = heightMap[rowIndex + 1][colIndex];
+        return currentValue + 1 >= downValue;
+    } else if (dir === "left") {
+        if (colIndex === 0) { return false; }
+
+
+        const leftValue = heightMap[rowIndex][colIndex - 1];
+        return currentValue + 1 >= leftValue;
+    } else {
+        if (colIndex === lastColIndex) { return false; }
+
+        const rightValue = heightMap[rowIndex][colIndex + 1];
+        return currentValue + 1 >= rightValue;
+    }
+}
+
+// i jankily copied a BFS implementation and applied it here
+function findStepCount(heightMap: number[][], start: Position, target: Position): number {
+    const queue: QueueItem[] = [{ pos: start, numSteps: 0 }];
+    const visitedPositions: Position[] = [];
     
-    numInspections = 0;
+    while (queue.length > 0) {
+        const currentItem = queue.shift();
+        console.log("considering item", currentItem)
+        const currentPos = currentItem.pos;
+        const currentNumSteps = currentItem.numSteps;
 
-    constructor(
-        id: number,
-        initialItems: number[],
-        operationFunc: (old: number) => number,
-        divisNumber: number,
-        trueId: number,
-        falseId: number
-    ) {
-        this.id = id;
-        this.heldItems = initialItems;
-        this.operation = operationFunc;
-        this.testFunction = (x: number) => (x % divisNumber === 0);
-        this.trueRecipient = trueId;
-        this.falseRecipient = falseId;
-    }
-
-    handleNextItem(): ItemResult | undefined {
-        if (this.heldItems.length === 0) {
-            // should never happen
-            return undefined
+        if (visitedPositions.find(pos =>
+            pos.colIndex === currentPos.colIndex && pos.rowIndex === currentPos.rowIndex)) {
+            console.log("already seen, ignoring");
+            continue;
         }
 
-        const currentItem = this.heldItems.shift();
-        const updatedWorry = this.operation(currentItem);
-        console.log(updatedWorry)
-        this.numInspections += 1;
+        visitedPositions.push(currentPos);
+        if (currentPos.rowIndex === target.rowIndex && currentPos.colIndex === target.colIndex) {
+            return currentNumSteps;
+        }
 
-        const testResult = this.testFunction(updatedWorry);
-        return {
-            itemNumber: updatedWorry,
-            monkeyRecipient: testResult ? this.trueRecipient : this.falseRecipient
+        if (canMoveInDirection(heightMap, currentPos, "up")) {
+            queue.push({
+                pos: { rowIndex: currentPos.rowIndex - 1, colIndex: currentPos.colIndex },
+                numSteps: currentNumSteps + 1,
+            })
+        }
+        if (canMoveInDirection(heightMap, currentPos, "down")) {
+            queue.push({
+                pos: { rowIndex: currentPos.rowIndex + 1, colIndex: currentPos.colIndex },
+                numSteps: currentNumSteps + 1,
+            })
+        }
+        if (canMoveInDirection(heightMap, currentPos, "left")) {
+            queue.push({
+                pos: { rowIndex: currentPos.rowIndex, colIndex: currentPos.colIndex - 1 },
+                numSteps: currentNumSteps + 1,
+            })
+        }
+        if (canMoveInDirection(heightMap, currentPos, "right")) {
+            queue.push({
+                pos: { rowIndex: currentPos.rowIndex, colIndex: currentPos.colIndex + 1 },
+                numSteps: currentNumSteps + 1,
+            })
         }
     }
-
-    hasMoreItems(): boolean {
-        return this.heldItems.length > 0;
-    }
-
-    catchItem(item: number) {
-        // HARD-CODED: need to change b/w test and real (I didn't want to code 
-        // the real calculation)
-        this.heldItems.push(item % leastCommonMultipleRealMonkeys);
-    }
-
-    print() {
-        let result = "\tmonkey " + this.id;
-        result += "\n\titems: " + this.heldItems;
-        result += "\n\tnumInspections: " + this.numInspections + "\n";
-        console.log(result);
-    }
-}
-
-function printMonkeys(monkeys: Monkey[]) {
-    monkeys.forEach(m => m.print())
+    return Number.MAX_SAFE_INTEGER
 }
 
 
-// updates monkeys in-place
-function handleRound(monkeys: Monkey[]) {
-    for (let i = 0; i < monkeys.length; i++) {
-        const currentMonkey = monkeys[i];
+function runInput(str: string) {
+    // Parse input into a 2-D array representing the height map
+    let heightMap: number[][] = [];
+    let startPosition: Position | undefined = undefined;
+    let endPosition: Position | undefined = undefined;
 
-        while (currentMonkey.hasMoreItems()) {
-            const itemResult = currentMonkey.handleNextItem();
-            console.log("monkey", i, "handling item with new worry", itemResult.itemNumber)
-            console.log("=>going to pass item", itemResult.itemNumber, "to", itemResult.monkeyRecipient)
-            if (!itemResult) { continue }
+    const lines = str.split("\n");
+    for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+        const mapRow: number[] = [];
+        const currentLine = lines[lineIndex];
 
-            const recipientMonkey = monkeys[itemResult.monkeyRecipient];
-            recipientMonkey.catchItem(itemResult.itemNumber)
-
+        for (let charIndex = 0; charIndex < currentLine.length; charIndex++) {
+            const currentChar = currentLine[charIndex];
+            let numberToAdd = currentChar.charCodeAt(0);
+            if (currentChar === "S") {
+                startPosition = { rowIndex: lineIndex, colIndex: charIndex };
+                numberToAdd = "a".charCodeAt(0);
+            } else if (currentChar === "E") {
+                endPosition = { rowIndex: lineIndex, colIndex: charIndex };
+                numberToAdd = "z".charCodeAt(0);
+            }
+            mapRow.push(numberToAdd);
         }
-    }
-}
 
-function runMonkeys(monkeys: Monkey[], numRounds: number) {
-    console.log("start");
-    printMonkeys(monkeys)
-    for (let roundNum = 1; roundNum <= numRounds; roundNum++) {
-        handleRound(monkeys)
-        console.log("\nend of round", roundNum)
-        printMonkeys(monkeys)
+        heightMap.push(mapRow);
     }
 
+    console.log(heightMap)
 
-    // Find monkey business result
-    monkeys.sort((a, b) => b.numInspections - a.numInspections)
-    console.log(monkeys[0].numInspections * monkeys[1].numInspections)
+    console.log(findStepCount(heightMap, startPosition, endPosition))
 }
-
-
-
-// I thought I'd be smart and hard-code inputs, but I had a sneaky typo 
-// that wasted me 30 minutes (ample time to write a real parser :/ )
-const testMonkeys: Monkey[] = [
-    new Monkey(0, [79, 98], x => x * 19, 23, 2, 3),
-    new Monkey(1, [54, 65, 75, 74], x => x + 6, 19, 2, 0),
-    new Monkey(2, [79, 60, 97], x => x * x, 13, 1, 3),
-    new Monkey(3, [74], x => x + 3, 17, 0, 1)
-];
-
-const realMonkeys: Monkey[] = [
-    new Monkey(0, [89, 95, 92, 64, 87, 68], x => x * 11, 2, 7, 4),
-    new Monkey(1, [87, 67], x => x + 1, 13, 3, 6),
-    new Monkey(2, [95, 79, 92, 82, 60], x => x + 6, 3, 1, 6),
-    new Monkey(3, [67, 97, 56], x => x * x, 17, 7, 0),
-    new Monkey(4, [80, 68, 87, 94, 61, 59, 50, 68], x => x * 7, 19, 5, 2),
-    new Monkey(5, [73, 51, 76, 59], x => x + 8, 7, 2, 1),
-    new Monkey(6, [92], x => x + 5, 11, 3, 0),
-    new Monkey(7, [99, 76, 78, 76, 79, 90, 89], x => x + 7, 5, 4, 5),
-]
-
-const leastCommonMultipleTestMonkeys = 96577;
-const leastCommonMultipleRealMonkeys = 9699690;
-
-// runMonkeys(testMonkeys, 20);
-runMonkeys(realMonkeys, 10000);
-
-
-
-// function runInput(str: string) {
-// }
-
 
 /** ----- MODIFY TO CHANGE TEST VS. REAL ----- */
 // runInput(testInput);
-// runInput(realInput);
+    runInput(realInput);
