@@ -6,7 +6,7 @@ import { testInput, realInput } from "./input";
 function compare(left: any, right: any): boolean | undefined {
     if (typeof left === "number" && typeof right === "number") {
         if (left < right) { return true; }
-        if (left > right) { return false;}
+        if (left > right) { return false; }
         return undefined;
     }
 
@@ -15,12 +15,12 @@ function compare(left: any, right: any): boolean | undefined {
 
         for (let i = 0; i < left.length && i < right.length; i++) {
             const compareResult = compare(left[i], right[i]);
-            if (compareResult !== undefined) { return compareResult;}
+            if (compareResult !== undefined) { return compareResult; }
         }
 
-     
-        if (left.length < right.length) { return true;}
-        if (left.length > right.length) { return false;}
+
+        if (left.length < right.length) { return true; }
+        if (left.length > right.length) { return false; }
 
         return undefined
     }
@@ -28,7 +28,7 @@ function compare(left: any, right: any): boolean | undefined {
     if (typeof left === "number") {
         // Convert left into array
         return compare([left], right)
-    } 
+    }
 
     return compare(left, [right])
 }
@@ -39,26 +39,25 @@ function compare(left: any, right: any): boolean | undefined {
 // console.log(x)
 
 function runInput(str: string) {
-    const pairs = str.split("\n\n");
+    const pairs = str.split("\n");
 
-    let total = 0
+    const onlyLines = pairs.filter(elem => elem !== "");
+    const withExtra = [...onlyLines, "[[2]]", "[[6]]"];
+    const mappedToAny = withExtra.map(elem => eval(elem));
 
-    pairs.forEach((pairString, index) => {
-        // Question is not 'zero-indexed'
-        const pairIndex = index + 1;
+    mappedToAny.sort((a, b) => compare(a, b) ? -1 : 1);
 
-        const pieces = pairString.split("\n");
-        const leftPacket = pieces[0];
-        const rightPacket = pieces[1];
-
-        // console.log(pairIndex, leftPacket, rightPacket)
-
-        const compareResult = compare(eval(leftPacket), eval(rightPacket))
-        if (compareResult) {
-            total += pairIndex;
+    let result = 1;
+    mappedToAny.forEach((elem, index) => {
+        if (compare(elem, eval("[[2]]")) === undefined) {
+            result *= (index + 1);
+        } else if (compare(elem, eval("[[6]]")) === undefined) {
+            result *= (index + 1);
         }
     })
-    console.log(total);
+
+    console.log(result);
+
 
 }
 

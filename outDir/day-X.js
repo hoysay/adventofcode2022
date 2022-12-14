@@ -37,21 +37,21 @@ function compare(left, right) {
 // const x = compare(eval("[1]"), eval("[1]"))
 // console.log(x)
 function runInput(str) {
-    const pairs = str.split("\n\n");
-    let total = 0;
-    pairs.forEach((pairString, index) => {
-        // Question is not 'zero-indexed'
-        const pairIndex = index + 1;
-        const pieces = pairString.split("\n");
-        const leftPacket = pieces[0];
-        const rightPacket = pieces[1];
-        // console.log(pairIndex, leftPacket, rightPacket)
-        const compareResult = compare(eval(leftPacket), eval(rightPacket));
-        if (compareResult) {
-            total += pairIndex;
+    const pairs = str.split("\n");
+    const onlyLines = pairs.filter(elem => elem !== "");
+    const withExtra = [...onlyLines, "[[2]]", "[[6]]"];
+    const mappedToAny = withExtra.map(elem => eval(elem));
+    mappedToAny.sort((a, b) => compare(a, b) ? -1 : 1);
+    let result = 1;
+    mappedToAny.forEach((elem, index) => {
+        if (compare(elem, eval("[[2]]")) === undefined) {
+            result *= (index + 1);
+        }
+        else if (compare(elem, eval("[[6]]")) === undefined) {
+            result *= (index + 1);
         }
     });
-    console.log(total);
+    console.log(result);
 }
 /** ----- MODIFY TO CHANGE TEST VS. REAL ----- */
 // runInput(testInput);
