@@ -21,6 +21,19 @@ class Cave {
 
         this.data[0][500] = "source"
 
+        // Add the gap and floor rows at the bottom
+        const gapRowItems: CaveItem[] = [];
+        for (let i = 0; i < parsedBools[0].length; i++) {
+            gapRowItems.push("air");
+        }
+        this.data.push(gapRowItems);
+
+        const floorRowItems: CaveItem[] = [];
+        for (let i = 0; i < parsedBools[0].length; i++) {
+            floorRowItems.push("rock");
+        }
+        this.data.push(floorRowItems);
+
         this.minColIndex = minColIndex;
     }
 
@@ -52,13 +65,15 @@ class Cave {
             // We're able to drop to a new place
             currentIndex = nextIndex;
             nextIndex = this.dropSandHelper(currentIndex);
+
         }
 
 
         // Not able to drop anymore
-        if (this.isAbyss(nextIndex)) {
+        if (nextIndex.rowIndex === 0 && nextIndex.colIndex === 500) {
             return true;
         } else {
+            this.minColIndex = Math.min(this.minColIndex, nextIndex.colIndex)
             this.data[nextIndex.rowIndex][nextIndex.colIndex] = "sand";
             return false;
         }
@@ -68,10 +83,10 @@ class Cave {
     dropSandHelper(currentIndex: CaveIndex): CaveIndex {
         // console.log("in drop helper", currentIndex)
         // If we're in the abyss, return starting position (b/c it's 'staying still')
-        if (this.isAbyss(currentIndex)) {
-            console.log("is abyss", currentIndex);
-            return currentIndex;
-        }
+        // if (this.isAbyss(currentIndex)) {
+        //     console.log("is abyss", currentIndex);
+        //     return currentIndex;
+        // }
 
 
         // If the space directly below the currentIndex is 'air', fall there.
@@ -176,7 +191,7 @@ function runInput(str: string) {
     let parsedBools: boolean[][] = [];
     for (let rowIndex = 0; rowIndex <= maxRowIndex; rowIndex++) {
         const rowBools: boolean[] = [];
-        for (let colIndex = 0; colIndex <= maxColIndex + 100; colIndex++) {
+        for (let colIndex = 0; colIndex <= maxColIndex + 200; colIndex++) {
             const hasRockAtCurrentLocation = rockIndices.find(elem => elem.rowIndex === rowIndex && elem.colIndex === colIndex)
             if (hasRockAtCurrentLocation) {
                 rowBools.push(true);
@@ -196,16 +211,12 @@ function runInput(str: string) {
     while (!shouldStop) {
         shouldStop = cave.dropSand()
 
-        if (total >= 990) {
-            console.log("on count", total)
-            cave.printCave(140);
-        }
+
         total++;
     }
-    console.log(total)
+    console.log(total+1)
 }
 
 /** ----- MODIFY TO CHANGE TEST VS. REAL ----- */
 // runInput(testInput);
 runInput(realInput);
-

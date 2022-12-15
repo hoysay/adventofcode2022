@@ -14,6 +14,17 @@ class Cave {
             this.data.push(rowItems);
         }
         this.data[0][500] = "source";
+        // Add the gap and floor rows at the bottom
+        const gapRowItems = [];
+        for (let i = 0; i < parsedBools[0].length; i++) {
+            gapRowItems.push("air");
+        }
+        this.data.push(gapRowItems);
+        const floorRowItems = [];
+        for (let i = 0; i < parsedBools[0].length; i++) {
+            floorRowItems.push("rock");
+        }
+        this.data.push(floorRowItems);
         this.minColIndex = minColIndex;
     }
     printCave(startRow) {
@@ -49,10 +60,11 @@ class Cave {
             nextIndex = this.dropSandHelper(currentIndex);
         }
         // Not able to drop anymore
-        if (this.isAbyss(nextIndex)) {
+        if (nextIndex.rowIndex === 0 && nextIndex.colIndex === 500) {
             return true;
         }
         else {
+            this.minColIndex = Math.min(this.minColIndex, nextIndex.colIndex);
             this.data[nextIndex.rowIndex][nextIndex.colIndex] = "sand";
             return false;
         }
@@ -61,10 +73,10 @@ class Cave {
     dropSandHelper(currentIndex) {
         // console.log("in drop helper", currentIndex)
         // If we're in the abyss, return starting position (b/c it's 'staying still')
-        if (this.isAbyss(currentIndex)) {
-            console.log("is abyss", currentIndex);
-            return currentIndex;
-        }
+        // if (this.isAbyss(currentIndex)) {
+        //     console.log("is abyss", currentIndex);
+        //     return currentIndex;
+        // }
         // If the space directly below the currentIndex is 'air', fall there.
         const directlyBelow = { rowIndex: currentIndex.rowIndex + 1, colIndex: currentIndex.colIndex };
         if (this.isAir(directlyBelow)) {
@@ -152,7 +164,7 @@ function runInput(str) {
     let parsedBools = [];
     for (let rowIndex = 0; rowIndex <= maxRowIndex; rowIndex++) {
         const rowBools = [];
-        for (let colIndex = 0; colIndex <= maxColIndex + 100; colIndex++) {
+        for (let colIndex = 0; colIndex <= maxColIndex + 200; colIndex++) {
             const hasRockAtCurrentLocation = rockIndices.find(elem => elem.rowIndex === rowIndex && elem.colIndex === colIndex);
             if (hasRockAtCurrentLocation) {
                 rowBools.push(true);
@@ -169,22 +181,16 @@ function runInput(str) {
     let shouldStop = cave.dropSand();
     while (!shouldStop) {
         shouldStop = cave.dropSand();
-        if (total >= 990) {
+        if (total >= 26200) {
             console.log("on count", total);
-            cave.printCave(140);
+            cave.printCave();
         }
         total++;
     }
     console.log(total);
-    // for (let i = 0; i < 24; i++) {
-    // console.log("---")
-    // }
-    // console.log(cave.data[9][493]);
-    // console.log(cave.dropSandHelper({rowIndex: 9, colIndex: 493}))
-    // console.log(cave.dropSandHelper({rowIndex: 10, colIndex: 500}))
 }
 /** ----- MODIFY TO CHANGE TEST VS. REAL ----- */
 // runInput(testInput);
 runInput(input_1.realInput);
-// 1000 is too high
+// 26282 too low
 //# sourceMappingURL=day-X.js.map
